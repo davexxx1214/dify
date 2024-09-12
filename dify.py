@@ -9,8 +9,6 @@ from common.log import logger
 from common.tmp_dir import TmpDir
 from common.expired_dict import ExpiredDict
 import requests
-import json
-import base64
 import cairosvg
 from PIL import Image
 from io import BytesIO
@@ -19,7 +17,6 @@ import io
 import os
 import uuid
 from glob import glob
-import translators as ts
 
 
 @plugins.register(
@@ -50,7 +47,6 @@ class dify(Plugin):
             self.handlers[Event.ON_HANDLE_CONTEXT] = self.on_handle_context
             # 从配置中提取所需的设置
             self.api_key = self.config.get("api_key","")
-
             self.params_cache = ExpiredDict(500)
 
             # 初始化成功日志
@@ -83,7 +79,7 @@ class dify(Plugin):
                     self.params_cache[user_id]['text_prompt'] = text_prompt
                     self.call_dify_service(user_id, e_context)
                 else:
-                    tip = f"💡欢迎使用汉字新解，指令格式为:\n\n{self.dify_prefix} + 你希望解释的汉字\n例如：{self.dify_prefix} 中国男足"
+                    tip = f"💡欢迎使用汉字新解，指令格式为:\n\n{self.dify_prefix} + 希望解释的词语\n例如：{self.dify_prefix} 中国男足"
                     reply = Reply(type=ReplyType.TEXT, content=tip)
                     e_context["reply"] = reply
                     e_context.action = EventAction.BREAK_PASS
@@ -95,8 +91,8 @@ class dify(Plugin):
         return unique_dir
 
     def call_dify_service(self, user_id, e_context):
-        logger.info("call_dify_service")
         prompt = self.params_cache[user_id]['text_prompt']
+        logger.info("call_dify_service, prompt = {prompt}, user_id = {user_id}")
 
         imgpath = TmpDir().path() + "dify" + str(uuid.uuid4()) + ".png" 
 
@@ -111,7 +107,7 @@ class dify(Plugin):
                 "inputs": {},
                 "query": prompt,
                 "response_mode": "blocking",
-                "user": "abc-123"
+                "user": user_id
             }
 
             response = requests.post(url, headers=headers, data=json.dumps(data))
