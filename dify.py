@@ -117,8 +117,12 @@ class dify(Plugin):
 
             response_json = json.loads(response.text)
             svg_data = response_json['answer']
-            svg_data = svg_data.lstrip('svg\n')
+            if svg_data.startswith('```svg\n'):
+                svg_data = svg_data.lstrip('```svg\n')
 
+            if svg_data.endswith('\n```'):
+                svg_data = svg_data.rstrip('\n```')
+            logger.info(f"svg_data =  {svg_data}")
             png_data = cairosvg.svg2png(bytestring=svg_data.encode('utf-8'))
             # 保存 PNG 数据为文件
             with open(imgpath, "wb") as png_file:
