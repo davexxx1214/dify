@@ -94,22 +94,22 @@ class dify(Plugin):
 
     def call_dify_service(self, user_id, e_context):
         prompt = self.params_cache[user_id]['text_prompt']
-        logger.info("call_dify_service, prompt = {prompt}, user_id = {user_id}")
+        logger.info(f"call_dify_service, prompt = {prompt}, user_id = {user_id}")
 
         imgpath = TmpDir().path() + "dify" + str(uuid.uuid4()) + ".png" 
 
         try:
             url = "https://api.dify.ai/v1/chat-messages"
             headers = {
-                'Authorization': 'Bearer {self.api_key}',
+                'Authorization': f'Bearer {self.api_key}',
                 'Content-Type': 'application/json',
             }
 
             data = {
                 "inputs": {},
-                "query": prompt,
+                "query": f'{prompt}',
                 "response_mode": "blocking",
-                "user": "abc-123"
+                "user": f'{user_id}'
             }
 
             response = requests.post(url, headers=headers, data=json.dumps(data))
