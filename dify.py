@@ -114,7 +114,8 @@ class dify(Plugin):
 
             response = requests.post(url, headers=headers, data=json.dumps(data))
 
-            svg_data = response.text.answer
+            response_json = json.loads(response.text)
+            svg_data = response_json['answer']
             svg_data = svg_data.lstrip('svg\n')
 
             png_data = cairosvg.svg2png(bytestring=svg_data.encode('utf-8'))
