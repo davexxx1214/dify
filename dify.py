@@ -109,7 +109,7 @@ class dify(Plugin):
                 "inputs": {},
                 "query": prompt,
                 "response_mode": "blocking",
-                "user": user_id
+                "user": "abc-123"
             }
 
             response = requests.post(url, headers=headers, data=json.dumps(data))
