@@ -113,6 +113,7 @@ class dify(Plugin):
             }
 
             response = requests.post(url, headers=headers, data=json.dumps(data))
+            logger.info(response.text)
 
             response_json = json.loads(response.text)
             svg_data = response_json['answer']
