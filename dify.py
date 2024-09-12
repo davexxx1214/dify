@@ -47,6 +47,8 @@ class dify(Plugin):
             self.handlers[Event.ON_HANDLE_CONTEXT] = self.on_handle_context
             # 从配置中提取所需的设置
             self.api_key = self.config.get("api_key","")
+            self.dify_prefix = self.config.get("dify_prefix","")
+
             self.params_cache = ExpiredDict(500)
 
             # 初始化成功日志
