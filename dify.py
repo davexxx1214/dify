@@ -106,8 +106,6 @@ class dify(Plugin):
         return unique_dir
 
     def call_dify_service(self, user_id, e_context, api_version=1):
-        prompt = self.params_cache[user_id]['text_prompt']
-        logger.info(f"call_dify_service, prompt = {prompt}, user_id = {user_id}, api_version = {api_version}")
 
         imgpath = TmpDir().path() + "dify" + str(uuid.uuid4()) + ".png" 
 
@@ -117,10 +115,16 @@ class dify(Plugin):
             # 根据 api_version 选择 API key
             if api_version == 1:
                 api_key = self.api_key
+                prompt = self.params_cache[user_id]['text_prompt']
+
             elif api_version == 2:
                 api_key = self.api_key_2
+                prompt = self.params_cache[user_id]['text_prompt_2']
+
             else:
                 raise ValueError("Invalid api_version. Must be 1 or 2.")
+
+            logger.info(f"call_dify_service, prompt = {prompt}, user_id = {user_id}, api_version = {api_version}")
 
             headers = {
                 'Authorization': f'Bearer {api_key}',
