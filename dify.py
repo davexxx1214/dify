@@ -48,7 +48,8 @@ class dify(Plugin):
             # 从配置中提取所需的设置
             self.api_key = self.config.get("api_key","")
             self.dify_prefix = self.config.get("dify_prefix","")
-
+            self.api_key_2 = self.config.get("api_key_2","")
+            self.dify_prefix_2 = self.config.get("dify_prefix_2","")
             self.params_cache = ExpiredDict(500)
 
             # 初始化成功日志
@@ -69,7 +70,7 @@ class dify(Plugin):
         if user_id not in self.params_cache:
             self.params_cache[user_id] = {}
             self.params_cache[user_id]['text_prompt'] = None
-
+            self.params_cache[user_id]['text_prompt_2'] = None
             logger.debug('Added new user to params_cache. user id = ' + user_id)
 
         if e_context['context'].type == ContextType.TEXT:
@@ -79,9 +80,21 @@ class dify(Plugin):
                 if match:  # 匹配上了dify的指令
                     text_prompt = content[len(self.dify_prefix):].strip()
                     self.params_cache[user_id]['text_prompt'] = text_prompt
-                    self.call_dify_service(user_id, e_context)
+                    self.call_dify_service(user_id, e_context, api_version=1)
                 else:
                     tip = f"💡欢迎使用汉字新解，指令格式为:\n\n{self.dify_prefix} + 希望解释的词语\n例如：{self.dify_prefix} 中国男足"
+                    reply = Reply(type=ReplyType.TEXT, content=tip)
+                    e_context["reply"] = reply
+                    e_context.action = EventAction.BREAK_PASS
+            elif content.startswith(self.dify_prefix_2):
+                pattern = self.dify_prefix_2 + r"\s(.+)"
+                match = re.match(pattern, content)
+                if match:  # 匹配上了dify的指令
+                    text_prompt = content[len(self.dify_prefix_2):].strip()
+                    self.params_cache[user_id]['text_prompt_2'] = text_prompt
+                    self.call_dify_service(user_id, e_context, api_version=2)
+                else:
+                    tip = f"💡欢迎使用单词卡片，指令格式为:\n\n{self.dify_prefix_2} + 希望解释的单词\n例如：{self.dify_prefix_2} hello"
                     reply = Reply(type=ReplyType.TEXT, content=tip)
                     e_context["reply"] = reply
                     e_context.action = EventAction.BREAK_PASS
@@ -92,16 +105,25 @@ class dify(Plugin):
         os.makedirs(unique_dir, exist_ok=True)
         return unique_dir
 
-    def call_dify_service(self, user_id, e_context):
+    def call_dify_service(self, user_id, e_context, api_version=1):
         prompt = self.params_cache[user_id]['text_prompt']
-        logger.info(f"call_dify_service, prompt = {prompt}, user_id = {user_id}")
+        logger.info(f"call_dify_service, prompt = {prompt}, user_id = {user_id}, api_version = {api_version}")
 
         imgpath = TmpDir().path() + "dify" + str(uuid.uuid4()) + ".png" 
 
         try:
             url = "https://api.dify.ai/v1/chat-messages"
+            
+            # 根据 api_version 选择 API key
+            if api_version == 1:
+                api_key = self.api_key
+            elif api_version == 2:
+                api_key = self.api_key_2
+            else:
+                raise ValueError("Invalid api_version. Must be 1 or 2.")
+
             headers = {
-                'Authorization': f'Bearer {self.api_key}',
+                'Authorization': f'Bearer {api_key}',
                 'Content-Type': 'application/json',
             }
 
